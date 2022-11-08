@@ -1111,6 +1111,7 @@ BOOL isExiting = FALSE;
         [self.webView loadFileURL:url allowingReadAccessToURL:url];
     } else {
         NSURLRequest* request = [NSURLRequest requestWithURL:url];
+        [request setValue:@"myvalue" forHTTPHeaderField:@"mykey"];
         [self.webView loadRequest:request];
     }
 }
