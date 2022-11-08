@@ -1110,7 +1110,7 @@ BOOL isExiting = FALSE;
     if ([url.scheme isEqualToString:@"file"]) {
         [self.webView loadFileURL:url allowingReadAccessToURL:url];
     } else {
-        NSURLRequest* request = [NSURLRequest requestWithURL:url];
+        NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
         [request setValue:@"myvalue" forHTTPHeaderField:@"mykey"];
         [self.webView loadRequest:request];
     }
