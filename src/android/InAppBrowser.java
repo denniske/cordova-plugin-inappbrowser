@@ -82,6 +82,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.Map;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class InAppBrowser extends CordovaPlugin {
@@ -149,6 +150,7 @@ public class InAppBrowser extends CordovaPlugin {
     private boolean fullscreen = true;
     private String[] allowedSchemes;
     private InAppBrowserClient currentClient;
+    private Map <String, String> extraHeaders;
 
     /**
      * Executes the request and returns PluginResult.
@@ -169,6 +171,9 @@ public class InAppBrowser extends CordovaPlugin {
             final String target = t;
             final HashMap<String, String> features = parseFeature(args.optString(2));
 
+            extraHeaders = parseHeaders(args.optString(3));
+
+            LOG.d(LOG_TAG, "extraHeaders = " + extraHeaders);
             LOG.d(LOG_TAG, "target = " + target);
 
             this.cordova.getActivity().runOnUiThread(new Runnable() {
@@ -541,7 +546,7 @@ public class InAppBrowser extends CordovaPlugin {
                 // NB: From SDK 19: "If you call methods on WebView from any thread
                 // other than your app's UI thread, it can cause unexpected results."
                 // http://developer.android.com/guide/webapps/migrating.html#Threads
-                childView.loadUrl("about:blank");
+                childView.loadUrl("about:blank", extraHeaders);
 
                 try {
                     JSONObject obj = new JSONObject();
@@ -589,6 +594,32 @@ public class InAppBrowser extends CordovaPlugin {
     }
 
     /**
+     * Put the list of headers into a map
+     *
+     * @param headerString
+     * @return
+     */
+    private Map<String, String> parseHeaders(String headerString) {
+      if (headerString.equals(NULL)) {
+        Map<String, String> map = new HashMap<String, String>();
+        return map;
+      } else {
+        Map<String, String> map = new HashMap<String, String>();
+        StringTokenizer features = new StringTokenizer(headerString, ",");
+        StringTokenizer option;
+        while(features.hasMoreElements()) {
+          option = new StringTokenizer(features.nextToken(), ":");
+          if (option.hasMoreElements()) {
+            String key = option.nextToken();
+            String value = option.nextToken();
+            map.put(key, value);
+          }
+        }
+        return map;
+      }
+    }
+
+    /**
      * Navigate to the new page
      *
      * @param url to load
@@ -598,9 +629,9 @@ public class InAppBrowser extends CordovaPlugin {
         imm.hideSoftInputFromWindow(edittext.getWindowToken(), 0);
 
         if (!url.startsWith("http") && !url.startsWith("file:")) {
-            this.inAppWebView.loadUrl("http://" + url);
+            this.inAppWebView.loadUrl("http://" + url, extraHeaders);
         } else {
-            this.inAppWebView.loadUrl(url);
+            this.inAppWebView.loadUrl(url, extraHeaders);
         }
         this.inAppWebView.requestFocus();
     }
@@ -994,7 +1025,7 @@ public class InAppBrowser extends CordovaPlugin {
                 // Enable Thirdparty Cookies
                 CookieManager.getInstance().setAcceptThirdPartyCookies(inAppWebView,true);
 
-                inAppWebView.loadUrl(url);
+                inAppWebView.loadUrl(url, extraHeaders);
                 inAppWebView.setId(Integer.valueOf(6));
                 inAppWebView.getSettings().setLoadWithOverviewMode(true);
                 inAppWebView.getSettings().setUseWideViewPort(useWideViewPort);
